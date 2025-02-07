@@ -22,7 +22,12 @@ import { ProfileValidation } from "@/lib/validation";
 import { useUserContext } from "@/context/AuthContext";
 import { useGetUserById, useUpdateUser } from "@/lib/react-query/queryAndMutations";
 
-const UpdateProfile = () => {
+interface UpdateProfileProps {
+  fieldChange: (files: File[]) => void;
+  mediaUrl: string;
+}
+
+const UpdateProfile: React.FC<UpdateProfileProps> = ({ fieldChange, mediaUrl }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { id } = useParams();

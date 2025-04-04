@@ -27,7 +27,7 @@ interface UpdateProfileProps {
   mediaUrl: string;
 }
 
-const UpdateProfile: React.FC<UpdateProfileProps> = ({ fieldChange, mediaUrl }) => {
+const UpdateProfile: React.FC<UpdateProfileProps> = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -45,7 +45,7 @@ const UpdateProfile: React.FC<UpdateProfileProps> = ({ fieldChange, mediaUrl }) 
 
   // Queries
   const { data: currentUser } = useGetUserById(id || "");
-  const { mutateAsync: updateUser, isLoading: isLoadingUpdate } =
+  const { mutateAsync: updateUser, isPending: isLoadingUpdate } =
     useUpdateUser();
 
   if (!currentUser)

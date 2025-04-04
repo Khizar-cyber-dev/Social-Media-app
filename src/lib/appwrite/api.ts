@@ -132,10 +132,6 @@ export async function createPost(post: INewPost) {
       throw new Error("Failed to retrieve file URL.");
     }
     
-    if (typeof fileUrl !== 'string') {
-      throw new Error("File URL is not a valid string.");
-    }
-    
     // Convert tags into array
     const tags = post.tags?.replace(/ /g, "").split(",") || [];
     
@@ -147,7 +143,7 @@ export async function createPost(post: INewPost) {
       {
         creators: post.userId,
         caption: post.caption,
-        imageUrl: fileUrl.substring(0, 2000),
+        imageUrl: fileUrl.toString(),
         imageId: uploadedFile.$id,
         location: post.location,
         tags: tags,
@@ -160,10 +156,10 @@ export async function createPost(post: INewPost) {
     }
     
     return newPost;
-    } catch (error) {
-      console.error("Error creating post:", error);
-      throw new Error("Failed to create post.");
-    }
+  } catch (error) {
+    console.error("Error creating post:", error);
+    throw new Error("Failed to create post.");
+  }
 }
 
 export async function uploadFile(file: File) {
@@ -179,23 +175,13 @@ export async function uploadFile(file: File) {
   }
 }
 
-enum ImageGravity {
-  Left = "left",
-  Right = "right",
-  Center = "center",
-  Top = "top",
-}
-
 export function getFilePreview(fileId: string) {
   try {
-    return storage.getFilePreview(
+    const fileUrl = storage.getFileDownload(
       appwriteConfig.storageId,
-      fileId,
-      2000,
-      2000,
-      ImageGravity.Top,
-      100
+      fileId
     );
+    return fileUrl.toString();
   } catch (error) {
     console.error("Error fetching file preview:", error);
     return null;
@@ -259,7 +245,7 @@ export async function getPostById(postId?: string) {
 
 export async function updatePost(post: IUpdatePost) {
   try {
-    let image = { imageUrl: new URL(post.imageUrl), imageId: post.imageId };
+    let image = { imageUrl: post.imageUrl, imageId: post.imageId };
 
     if (post.file.length > 0) {
       const uploadedFile = await uploadFile(post.file[0]);
@@ -271,7 +257,7 @@ export async function updatePost(post: IUpdatePost) {
         throw new Error("Failed to retrieve file preview.");
       }
 
-      image = { imageUrl: new URL(fileUrl), imageId: uploadedFile.$id };
+      image = { imageUrl: fileUrl, imageId: uploadedFile.$id };
     }
 
     const tags = post.tags?.replace(/ /g, "").split(",").filter(Boolean) || [];
@@ -400,7 +386,7 @@ export async function deleteSavedPost(savedRecordId: string) {
 
 // ============================== GET USER'S POST
 export async function getUserPosts(userId?: string) {
-  if (!userId) return;
+  if (!userId) return { total: 0, documents: [] };
 
   try {
     const post = await database.listDocuments(
@@ -409,11 +395,12 @@ export async function getUserPosts(userId?: string) {
       [Query.equal("creator", userId), Query.orderDesc("$createdAt")]
     );
 
-    if (!post) throw Error;
+    if (!post) return { total: 0, documents: [] };
 
     return post;
   } catch (error) {
     console.log(error);
+    return { total: 0, documents: [] };
   }
 }
 
